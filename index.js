@@ -77,7 +77,7 @@ app.get('/api/user/:accountName', async (req, res) => {
    // create Posts Model
 
     const posts = accountData.data.data.user.edge_owner_to_timeline_media.edges.map((p) => {
-      const post = {
+      return {
         typename: p.node.__typename, // string
         shortcode: p.node.shortcode,  // string
         displayUrl: p.node.display_url,  // string
@@ -98,7 +98,6 @@ app.get('/api/user/:accountName', async (req, res) => {
         }) || [] ,
         author: userDoc._id.toString()
       }
-      return post
     })
 
     for(let i=0;i< posts.length; i++) {
@@ -119,7 +118,7 @@ app.get('/api/user/:accountName', async (req, res) => {
 
       res.json({ user: userDoc._doc, posts })
     } else {
-      const userData = await userDoc.save()
+      await userDoc.save()
       res.json({user: userDoc._doc, posts})
     }
 
