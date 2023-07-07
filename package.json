@@ -2,6 +2,7 @@
   "name": "instagram-back",
   "version": "0.0.1",
   "description": "back-end-instagram",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

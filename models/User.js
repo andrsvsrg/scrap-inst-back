@@ -11,7 +11,7 @@
 //   bioLinks: user.bio_links.map((link) => link.url).filter((e) => e)  // URL
 // }
 
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const UserSchema = new mongoose.Schema({
   userInstId: {
@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique:true
   },
-  biography: String,  // string
+  biography: String,
   followed:{
     type: Number,
     default: 0,
@@ -34,7 +34,9 @@ const UserSchema = new mongoose.Schema({
     default: 0,
   },
   fullName: String,
-  categoryName:  String, // string
-  profilePicUrl: URL,
-  bioLinks: Array  // URL
-})
+  categoryName:  String,
+  profilePicUrl: String,
+  bioLinks: Array
+} )
+
+export default mongoose.model('User', UserSchema)
