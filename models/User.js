@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  isVerified: {
+    type:Boolean,
+    default: false
+  },
   follow: {
     type: Number,
     default: 0,

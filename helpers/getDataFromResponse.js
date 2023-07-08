@@ -7,6 +7,7 @@ export const getUserInfoFromResponse = (user) => {
     follow: user.edge_follow.count,
     fullName: user.full_name,
     categoryName: user.category_name,
+    isVerified: user.is_verified,
     profilePicUrl: user.profile_pic_url_hd || user.profile_pic_url,
     bioLinks: user.bio_links.map((link) => link.url).filter((e) => e)
   }
@@ -21,7 +22,7 @@ export const getPostInfoFromResponse = (postsArray, userObjectId = '') => {
       timestamps: p.node.taken_at_timestamp,  // number
       videoUrl: p.node.video_url || "",  // string
       videoViewCount: p.node.video_view_count || 0, // number
-      likes: p.node?.edge_liked_by?.count || p?.node?.edge_liked_by ||  0, // number
+      likes: p.node?.edge_liked_by?.count || p?.node?.edge_media_preview_like?.count ||  0, // number
       isVideo: p.node.is_video  , // boolean
       edgeChildren: p.node.edge_sidecar_to_children?.edges?.map((child) => {
         return {

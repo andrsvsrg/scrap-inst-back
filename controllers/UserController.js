@@ -69,10 +69,9 @@ export const getAccountInfoAndPosts = async (req, res) => {
 
     const isUserExists = await UserModel.findOne({ 'userInstId' : userDoc.userInstId })
     if(isUserExists) {
-
-
       res.json({ user: userDoc._doc, posts })
-    } else {
+      // res.json(accountData)
+     } else {
       await userDoc.save()
       res.json({user: userDoc._doc, posts})
     }

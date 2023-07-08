@@ -1,7 +1,7 @@
 import { getPostsList, getPostDetail } from '../helpers/requestToInstagramApi.js'
 import { getPostInfoFromResponse } from '../helpers/getDataFromResponse.js'
 import UserModel from '../models/User.js'
-import User from '../models/User.js'
+import PostModel from '../models/Post.js'
 export const getDetailedInfoAboutPost = async(req,res) => {
   const shortCode = req.params.shortCode
   const postData = await getPostDetail(shortCode)
@@ -22,16 +22,28 @@ export const getListPostByUserId = async(req,res) => {
   const postsData = await getPostsList(userId, posts_after, posts_count)
   const postsArray = postsData.data.user.edge_owner_to_timeline_media.edges
   const userDoc = await UserModel.findOne({userInstId:userId.toString() })
-  console.log(await UserModel.findById('64a54e2f9cce57ba851714c6'))
+
   let userObjId
   if(userDoc) {
-    console.log(userDoc._id.toString())
     userObjId = userDoc._id.toString()
   }
 
+
   const posts = getPostInfoFromResponse(postsArray, userObjId )
+  for(let i = 0; i < posts.length; i++) {
+    const isPostExist = await PostModel.findOne({shortcode:posts[i].shortcode })
+    if(isPostExist) {
+      await PostModel.findOneAndUpdate({shortcode:posts[i].shortcode }, posts[i])
+    } else {
+      const postDoc = new PostModel(posts[i])
+      await postDoc.save()
+    }
+  }
+
+
   if(postsData.status === 'ok') {
-    res.json(posts)
+    res.json({...postsData.data.user.edge_owner_to_timeline_media ,edges:posts})
+    // res.json(postsData)
     res.end()
   } else {
     res.status(+postsData.response.status)
