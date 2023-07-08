@@ -1,5 +1,5 @@
-import { getPostsList, getPostDetail } from '../helpers/requestToInstagramApi.js'
-import { getPostInfoFromResponse } from '../helpers/getDataFromResponse.js'
+
+import { getPostDetail, getPostInfoFromResponse, getPostsList } from '../utils/index.js'
 import UserModel from '../models/User.js'
 import PostModel from '../models/Post.js'
 export const getDetailedInfoAboutPost = async(req,res) => {
@@ -18,7 +18,6 @@ export const getDetailedInfoAboutPost = async(req,res) => {
 
 export const getListPostByUserId = async(req,res) => {
   const {userId, posts_after = '', posts_count = 12} = req.body
-  console.log(userId, posts_after , posts_count)
   const postsData = await getPostsList(userId, posts_after, posts_count)
   const postsArray = postsData.data.user.edge_owner_to_timeline_media.edges
   const userDoc = await UserModel.findOne({userInstId:userId.toString() })

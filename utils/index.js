@@ -1,0 +1,2 @@
+export {getUserInfoFromResponse , getPostInfoFromResponse}from './getDataFromResponse.js'
+export { getProfileApi, getPostDetail, getProfileId, getProfileInfoOld, getPostsList} from './requestToInstagramApi.js'

@@ -1,7 +1,7 @@
 import UserModel from '../models/User.js'
 import PostModel from '../models/Post.js'
-import { getProfileApi, getProfileId, getProfileInfoOld } from '../helpers/requestToInstagramApi.js'
-import { getPostInfoFromResponse, getUserInfoFromResponse } from '../helpers/getDataFromResponse.js'
+import { getPostInfoFromResponse, getProfileApi, getProfileId, getProfileInfoOld } from '../utils/index.js'
+
 
 export const getIdByUsername =  async(req,res) => {
   const accountName = req.params.accountName
