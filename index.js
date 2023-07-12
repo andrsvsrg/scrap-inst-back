@@ -36,7 +36,7 @@ const PORT = 3001
 
 app.get('/api/get-id/:accountName', UserController.getIdByUsername)  // no needed db
 app.get('/api/user-old/:accountName', UserController.getAccountInfoOld)
-app.get('/api/user/:accountName', UserController.getAccountInfoAndPosts)  // db+
+app.get('/api/user/:accountName', UserController.getAccountInfoAndPosts)  // db+ todo totalPosts, videoPlayCount, commentCount
 app.get('/api/p/:shortCode', PostController.getDetailedInfoAboutPost)  // todo db
 app.post('/api/posts/', PostController.getListPostByUserId)  //  db+  , todo validation req body
 
