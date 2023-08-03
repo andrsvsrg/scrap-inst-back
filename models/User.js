@@ -27,6 +27,7 @@ const UserSchema = new mongoose.Schema({
   fullName: String,
   categoryName:  String,
   profilePicUrl: String,
+  profilePicUrlD: String,
   bioLinks: Array
 } )
 

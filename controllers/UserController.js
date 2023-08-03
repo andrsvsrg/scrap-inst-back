@@ -8,6 +8,13 @@ import {
   getUserInfoFromResponse
 } from '../utils/index.js'
 
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import fs from 'fs'
+import fetch from 'node-fetch'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export const getIdByUsername =  async(req,res) => {
   const accountName = req.params.accountName
@@ -52,37 +59,29 @@ export const getAccountInfoAndPosts = async (req, res) => {
 
     // download all content and update links
     const {newUserInfo, newPosts} = await downloadContent(userInfo, posts)
-    console.log(newUserInfo)
-    console.log(newPosts)
 
-    const isUserExist = await UserModel.findOne({userInstId: userInfo.userInstId})
+    const isUserExist = await UserModel.findOne({userInstId: newUserInfo.userInstId})
     let userDoc
     if(isUserExist) {
-      const {userInstId, ...newData } = userInfo
+      const {userInstId, ...newData } = newUserInfo
       userDoc =  await UserModel.findOneAndUpdate({ 'userInstId' :userInstId }, newData)
     } else {
-      userDoc = new UserModel(userInfo)
+      userDoc = new UserModel(newUserInfo)
       await userDoc.save()
     }
 
-
-
-
-    for(let i=0;i< posts.length; i++) {
-      const isIncludedPost = await PostModel.findOne({shortcode: posts[i].shortcode})
+    for(let i=0;i< newPosts.length; i++) {
+      const isIncludedPost = await PostModel.findOne({shortcode: newPosts[i].shortcode})
       if(isIncludedPost) {
-        await PostModel.findOneAndUpdate({shortcode: posts[i].shortcode}, posts[i])
+        await PostModel.findOneAndUpdate({shortcode: newPosts[i].shortcode}, newPosts[i])
       } else {
-        const postDoc = new PostModel(posts[i])
+        const postDoc = new PostModel(newPosts[i])
         await postDoc.save()
       }
     }
 
-
-    const isUserExists = await UserModel.findOne({ 'userInstId' : userDoc.userInstId })
-    if(isUserExists) {
+    if(isUserExist) {
       res.json({ user: userDoc._doc, posts })
-      // res.json(accountData)
      } else {
       await userDoc.save()
       res.json({user: userDoc._doc, posts})
@@ -95,36 +94,90 @@ export const getAccountInfoAndPosts = async (req, res) => {
   }
 }
 
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import fs from 'fs'
-import fetch from 'node-fetch'
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-
-
-
-// const url = 'https://scontent-iev1-1.cdninstagram.com/v/t50.2886-16/55948865_378311699425814_4899253638142798209_n.mp4?efg=eyJ2ZW5jb2RlX3RhZyI6InZ0c192b2RfdXJsZ2VuLjcyMC5mZWVkLmRlZmF1bHQiLCJxZV9ncm91cHMiOiJbXCJpZ193ZWJfZGVsaXZlcnlfdnRzX290ZlwiXSJ9&_nc_ht=scontent-iev1-1.cdninstagram.com&_nc_cat=102&_nc_ohc=xawV9Ulp3QMAX_Do6N5&edm=AOQ1c0wBAAAA&vs=18032080198107070_1712506711&_nc_vs=HBksFQAYJEdFRzJWUU1XYW5XT0VsZ0JBSUdwQ3Y0NXBmMURia1lMQUFBRhUAAsgBABUAGCRHSS1uV2dNbTdvemlfbThCQUtBVklHN1psLUJVYmtZTEFBQUYVAgLIAQAoABgAGwGIB3VzZV9vaWwBMBUAACbIrpin%2BbG5PxUCKAJDMywXQDQFHrhR64UYEmRhc2hfYmFzZWxpbmVfMV92MREAdeoHAA%3D%3D&_nc_rid=62acb3abcd&ccb=7-5&oh=00_AfDtjpAh8kXso5tIupPkN7_EOqx8mh2UHHrBgl10fuwN7w&oe=64ADF394&_nc_sid=8b3546'
-// downloadFile(url, join(__dirname, '/tmp/img.mp4'))
-//   .then(()=>console.log('OK'))
-//   .catch(err=>console.error(err));
 async function downloadContent(userInfo, posts) {
   await downloadFile(userInfo.profilePicUrl, join(__dirname,'..', `/tmp/account_page/${userInfo.userInstId}.jpg`))
-  userInfo.profilePicUrl = join('http://localhost:3001/', `/tmp/account_page/${userInfo.userInstId}.jpg`)
+  userInfo.profilePicUrlD = join('http://localhost:3001/', `/tmp/account_page/${userInfo.userInstId}.jpg`)
+
   for(let i = 0; i< posts.length ; i++) {
     await  downloadFile(posts[i].displayUrl, join(__dirname, '..', `/tmp/account_page/${posts[i].shortcode}.jpg`))
-    posts[i].displayUrl = join( 'http://localhost:3001/',`/tmp/account_page/${posts[i].shortcode}.jpg`)
+    posts[i].displayUrlD = join( 'http://localhost:3001/',`/tmp/account_page/${posts[i].shortcode}.jpg`)
   }
-
   return {newUserInfo: userInfo , newPosts : posts}
 
 
-  function downloadFile(url, path) {
-    return fetch(url).then(res => {
-      res.body.pipe(fs.createWriteStream(path));
-    });
+  function downloadFile(url, path) {   // maybe transfer to utils
+    if(fs.existsSync(path)) {
+      return
+    }
+    fetch(url)
+      .then(res => {
+        if (!res.ok) {
+          console.error(`Failed to download file from ${url}, status: ${res.status}`)
+          return
+        }
+        res.body.pipe(fs.createWriteStream(path))
+      })
+      .catch(error => {
+        console.error(`Error downloading file from ${url}: ${error}`)
+      })
   }
+}
 
+export async function sendJsonToClient(req, res) {
+  let {userField, postFields, countPosts , userInstId} = req.body
+  console.log({userField, postFields, countPosts , userInstId})
+  const json = {}
+  if(!userInstId) {
+    res.status(404).json({message: 'user not found'})
+  }
+  try {
+    userField = userField ? JSON.parse(userField) : []
+    postFields = postFields ? JSON.parse(postFields) : []
+    countPosts = countPosts ? +countPosts : 0
+    if(userField.length !== 0) {
+      const user = await UserModel.findOne({userInstId})
+      json.userInfo = {}
+      userField.forEach((field) => {
+        json.userInfo[field] = user._doc[field]
+      })
+    }
+    if(postFields.length !== 0 && countPosts !== 0) {
+      const posts = await PostModel.find({author:userInstId})
+      json.posts = []
+      if(countPosts <= posts.length) {
+        posts.splice(0,countPosts).forEach((post) => {
+          const jsonPost = {}
+          postFields.forEach((field) => {
+            jsonPost[field] = post[field]
+          })
+
+          json.posts.push(jsonPost)
+        })
+      }
+    }
+
+    const pathToTmpJson = join(__dirname, '..', `tmp/jsons/${userInstId}.json`)
+    const jsonData = JSON.stringify(json)
+    fs.writeFile(pathToTmpJson, jsonData, (err) => {
+      if (err) {
+        console.error('Ошибка при создании файла:', err);
+        return res.status(500).send('Ошибка при создании файла');
+      }
+
+      fs.readFile(pathToTmpJson, (err, data) => {
+        if (err) {
+          console.error('Ошибка при чтении файла:', err);
+          return res.status(500).send('Ошибка при чтении файла');
+        }
+
+        res.setHeader('Content-disposition', `attachment; filename=${userInstId}.json`);
+        res.setHeader('Content-type', 'application/json');
+        res.send(data);
+      });
+    });
+
+  } catch(e){
+    console.error(e.message)
+    res.status(500).send({message: e.message })
+  }
 }

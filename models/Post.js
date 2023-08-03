@@ -14,6 +14,10 @@ const PostSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  displayUrlD: {
+    type: String,
+    required: true,
+  },
   timestamps:{
     type: Number,
     required: true,
