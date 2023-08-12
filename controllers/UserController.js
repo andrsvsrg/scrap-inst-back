@@ -124,30 +124,30 @@ async function downloadContent(userInfo, posts) {
 }
 
 export async function sendJsonToClient(req, res) {
-  let {userField, postFields, countPosts , userInstId} = req.body
-  console.log({userField, postFields, countPosts , userInstId})
+  let {selectedUserFields, selectedPostFields, numbersOfPosts , userInstId} = req.body
+  console.log({selectedUserFields, selectedPostFields, numbersOfPosts , userInstId})
   const json = {}
   if(!userInstId) {
     res.status(404).json({message: 'user not found'})
   }
   try {
-    userField = userField ? JSON.parse(userField) : []
-    postFields = postFields ? JSON.parse(postFields) : []
-    countPosts = countPosts ? +countPosts : 0
-    if(userField.length !== 0) {
+    selectedUserFields = selectedUserFields ? selectedUserFields : []
+    selectedPostFields = selectedPostFields ? selectedPostFields : []
+    numbersOfPosts = numbersOfPosts ? +numbersOfPosts : 0
+    if(selectedUserFields.length !== 0) {
       const user = await UserModel.findOne({userInstId})
       json.userInfo = {}
-      userField.forEach((field) => {
+      selectedUserFields.forEach((field) => {
         json.userInfo[field] = user._doc[field]
       })
     }
-    if(postFields.length !== 0 && countPosts !== 0) {
+    if(selectedPostFields.length !== 0 && numbersOfPosts !== 0) {
       const posts = await PostModel.find({author:userInstId})
       json.posts = []
-      if(countPosts <= posts.length) {
-        posts.splice(0,countPosts).forEach((post) => {
+      if(numbersOfPosts <= posts.length) {
+        posts.splice(0,numbersOfPosts).forEach((post) => {
           const jsonPost = {}
-          postFields.forEach((field) => {
+          selectedPostFields.forEach((field) => {
             jsonPost[field] = post[field]
           })
 
